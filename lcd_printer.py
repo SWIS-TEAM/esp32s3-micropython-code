@@ -1,26 +1,3 @@
-"""
-hello.py
-========
-
-.. figure:: ../_static/hello.jpg
-    :align: center
-
-    Test for text_font_converter.
-
-Writes "Hello!" in random colors at random locations on the Display.
-https://www.youtube.com/watch?v=atBa0BYPAAc
-
-.. note:: This example requires the following modules:
-
-  .. hlist::
-    :columns: 3
-
-    - `st7789py`
-    - `tft_config`
-    - `vga2_bold_16x32`
-
-"""
-
 import random
 import st7789py as st7789
 import tft_config
@@ -51,7 +28,6 @@ class LCDPrinter:
             st7789.RED, st7789.GREEN, st7789.BLUE, st7789.YELLOW,
             st7789.CYAN, st7789.MAGENTA]
 
-   
     def print_text(self, text, x, y, color=st7789.WHITE, font=font_schmol):
         """
         Print text on the TFT display at specified coordinates.
@@ -65,10 +41,16 @@ class LCDPrinter:
         self.tft.text(font, text, x, y, color)
 
     def print_title(self, color=st7789.WHITE):
+        """
+        Print the title "Usage Monitor" on the TFT display.
+        :param color: The color of the title text (default is white).
+        :return: None
+        """
+
         self.tft.fill(st7789.BLACK)
         # Center "Activity" and "Monitor" on separate lines
         screen_width = self.tft.physical_width
-        text1 = "Activity"
+        text1 = "Usage"
         text2 = "Monitor"
         # Calculate text width using font_big.WIDTH and len
         text1_width = len(text1) * font_big.WIDTH
@@ -125,13 +107,10 @@ class LCDPrinter:
             self.tft.text(font, line, x, y + i * (font.HEIGHT + 2), color)
 
             
-    def print_usage(self, usage_dict, msg=None):
+    def print_usage(self, usage_dict):
         """
         Display CPU, RAM, and DISK usage on the TFT display.
-        :param cpu: cpu usage.
-        :param ram: ram usage.
-        :param disk: disk usage.
-        :param msg: additional message to print.
+        :param usage_dict: A dictionary containing usage data with keys "User", "System", "Idle", etc.
         """
 
         # Clear the display area under the title
@@ -140,11 +119,13 @@ class LCDPrinter:
         # Do not clear the whole screen; only clear rectangles where values are printed
         screen_width = self.tft.physical_width
         order = ["User", "System", "Idle", "RAM_USED", "OUT_OF"]
+        max_height = 0
         for idx, key in enumerate(order):
             if key in usage_dict:
                 value = usage_dict[key]
                 color = self.colors[idx % len(self.colors)]
                 y = self.FIRST_ROW_Y + idx * (font_schmol.HEIGHT * 2 + 8)
+                max_height += y
                 key_text = f"{key}:"
                 value_text = f"{value}"
                 key_width = len(key_text) * font_schmol.WIDTH
@@ -169,7 +150,13 @@ def main():
         cpu = random.randint(45, 55)
         ram = random.randint(17, 23)
         disk = random.randint(8, 12)
-        printer.print_usage(cpu, ram, disk, "Hello, World!")
+        printer.print_usage({
+            "User": f"{cpu}%",
+            "System": f"{ram}%",
+            "Idle": f"{disk}%",
+            "RAM_USED": f"{random.randint(10, 30)}%",
+            "OUT_OF": f"{random.randint(1, 5)}GB"
+        })
         time.sleep(3)
 
 if __name__ == "__main__":
