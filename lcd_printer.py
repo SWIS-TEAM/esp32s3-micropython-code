@@ -42,10 +42,14 @@ class LCDPrinter:
         self.tft = tft
         self.FIRST_ROW_Y = 110
         self.FIRST_COLUMN_X = 10
+        
         self.tft.fill(st7789.BLACK)  # Clear the screen initially
         self.print_title(st7789.WHITE)  # Print the title initially
         self.print_info("Waiting for data...", 10, self.FIRST_ROW_Y, 
                         st7789.WHITE, font=font_pretty)
+        self.colors = [
+            st7789.RED, st7789.GREEN, st7789.BLUE, st7789.YELLOW,
+            st7789.CYAN, st7789.MAGENTA]
 
    
     def print_text(self, text, x, y, color=st7789.WHITE, font=font_schmol):
@@ -74,6 +78,19 @@ class LCDPrinter:
         self.print_text(text1, x1, self.FIRST_COLUMN_X, color, font=font_big)
         self.print_text(text2, x2, self.FIRST_COLUMN_X + font_big.HEIGHT + 4, 
                         color, font=font_big)
+        
+    def clear_display_under_title(self):
+        """
+        Clear the display area under the title.
+        This method fills the area below the title with black color.
+        :return: None
+        """
+        screen_height = self.tft.physical_height
+        screen_width = self.tft.physical_width
+        title_height = 2 * (font_big.HEIGHT + 4)
+        # Fill the area below the title with black color
+        self.tft.fill_rect(0, title_height, screen_width, 
+                           screen_height - title_height, st7789.BLACK)
 
 
     def print_info(self, text, x, y, color=st7789.WHITE, font=font_pretty):
@@ -108,7 +125,7 @@ class LCDPrinter:
             self.tft.text(font, line, x, y + i * (font.HEIGHT + 2), color)
 
             
-    def print_usage(self, cpu, ram, disk, msg=None):
+    def print_usage(self, usage_dict, msg=None):
         """
         Display CPU, RAM, and DISK usage on the TFT display.
         :param cpu: cpu usage.
@@ -117,27 +134,34 @@ class LCDPrinter:
         :param msg: additional message to print.
         """
 
-        self.tft.fill(st7789.BLACK)
-        # Center "Activity" and "Monitor" on separate lines
-        self.print_title(st7789.WHITE)
-        self.print_text(f" CPU: {cpu}%", 
-                        self.FIRST_COLUMN_X, 
-                        self.FIRST_ROW_Y, 
-                        st7789.RED, 
-                        font=font_schmol)
-        
-        self.print_text(f" RAM: {ram}%", 
-                        self.FIRST_COLUMN_X, 
-                        self.FIRST_ROW_Y + font_schmol.HEIGHT + 4, 
-                        st7789.GREEN, 
-                        font=font_schmol)
-        self.print_text(f"DISK: {disk}%", 
-                        self.FIRST_COLUMN_X, 
-                        self.FIRST_ROW_Y + 2*(font_schmol.HEIGHT + 4), 
-                        st7789.BLUE, 
-                        font=font_schmol)
-        if msg:
-            self.print_info(msg, 10, self.FIRST_ROW_Y + 5*(font_schmol.HEIGHT + 4), st7789.WHITE, font=font_pretty)
+        # Clear the display area under the title
+        self.clear_display_under_title()
+
+        # Do not clear the whole screen; only clear rectangles where values are printed
+        screen_width = self.tft.physical_width
+        order = ["User", "System", "Idle", "RAM_USED", "OUT_OF"]
+        for idx, key in enumerate(order):
+            if key in usage_dict:
+                value = usage_dict[key]
+                color = self.colors[idx % len(self.colors)]
+                y = self.FIRST_ROW_Y + idx * (font_schmol.HEIGHT * 2 + 8)
+                key_text = f"{key}:"
+                value_text = f"{value}"
+                key_width = len(key_text) * font_schmol.WIDTH
+                value_width = len(value_text) * font_schmol.WIDTH
+                key_x = (screen_width - key_width) // 2
+                value_x = (screen_width - value_width) // 2
+
+                self.print_text(key_text, 
+                    key_x, 
+                    y, 
+                    color, 
+                    font=font_schmol)
+                self.print_text(value_text, 
+                    value_x, 
+                    y + font_schmol.HEIGHT + 2, 
+                    color, 
+                    font=font_schmol)
 
 def main():
     printer = LCDPrinter()

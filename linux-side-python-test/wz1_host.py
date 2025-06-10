@@ -54,14 +54,16 @@ def on_sig_int(sig,frame):
 
 signal.signal(signal.SIGINT, on_sig_int)
 
+print(f"Interface {my_intfn} claimed, endpoints: {glb.eps}")
+
 epin=glb.eps[1]
 epout=glb.eps[0]
 epin2=glb.eps[3]
 epout2=glb.eps[2]
 
-epout.write(b"CPU:30;RAM:20;DISK:10")
-res=epin.read(1000)
-print(res.tobytes())
+# epout.write(b"CPU:30;RAM:20;DISK:10")
+# res=epin.read(1000)
+# print(res.tobytes())
 epout2.write(b"CPU:40;RAM:50;DISK:30")
 res=epin2.read(1000)
 print(res.tobytes())

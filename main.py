@@ -82,58 +82,55 @@ class WZab1Interface(Interface):
         dt = bytes(m)        
         self._rx.finish_read(len(m))
         # check if data is correctly formatted
-        if dt.startswith(b"CPU:"):
-            # Extract the data and print it on the LCD
-            # Assuming the format is "CPU:30;RAM:10;DISK:20"
-            try:
-                parts = dt.decode('utf-8').split(';')
-                cpu = int(parts[0].split(':')[1])
-                ram = int(parts[1].split(':')[1])
-                disk = int(parts[2].split(':')[1])
-                self.lcd_printer.print_usage(cpu, ram, disk)
+        # Extract the data and print it on the LCD
+        # Assuming the format is "CPU:30;RAM:10;DISK:20"
+        try:
+            parts = dt.decode('utf-8').split(';')
+            usage_dict = {}
+            for part in parts:
+                part = part.strip()
+                key, value = part.split(':')
+                key = key.strip()
+                value = value.strip()
+                usage_dict[key] = value
+            self.lcd_printer.print_usage(usage_dict)
 
-                # Send a response back to the host
-                m = self._tx.write(b"Data received successfully")
-                self._tx_xfer()
-            except (ValueError, IndexError):
-                # If the data is not in the expected format, send an error message
-                m = self._tx.write(b"Error: Invalid data format")
-                self._tx_xfer()
-        else:
-            # if data is not in the expected format, send an error message:
-            m = self._tx.write(b"Invalid data format")
+            # Send a response back to the host
+            m = self._tx.write(b"Data received successfully")
             self._tx_xfer()
-            
+        except (ValueError, IndexError):
+            # If the data is not in the expected format, send an error message
+            m = self._tx.write(b"Error: Invalid data format")
+            self._tx_xfer()
+        
 
     def _on_rx_c(self, ep):
-        # Receive received data. Called via micropython.schedule, outside of the USB callback function.
+        # Receive received data. Called via micropython.schedule, outside of the USB callback function.l
         m = self._rx_c.pend_read()
         dt = bytes(m)        
         self._rx_c.finish_read(len(m))
         # check if data is correctly formatted
-        if dt.startswith(b"CPU:"):
-            # Extract the data and print it on the LCD
-            # Assuming the format is "CPU:<value>;RAM:<value>;DISK:<value>"
-            try:
-                parts = dt.decode('utf-8').split(';')
-                cpu = int(parts[0].split(':')[1])
-                ram = int(parts[1].split(':')[1])
-                disk = int(parts[2].split(':')[1])
-                self.lcd_printer.print_usage(cpu, ram, disk)
+        try:
+            # clear lcd
+            # self.lcd_printer.tft.fill(0)
+            # self.lcd_printer.print_info("dt: " + dt.decode('utf-8'), 10, self.lcd_printer.FIRST_ROW_Y)
+            parts = dt.decode('utf-8').split(';')
+            usage_dict = {}
+            for part in parts:
+                part = part.strip()
+                key, value = part.split(':')
+                key = key.strip()
+                value = value.strip()
+                usage_dict[key] = value
+            self.lcd_printer.print_usage(usage_dict)
 
-                # Send a response back to the host
-                m = self._tx_c.write(b"Data received successfully")
-                self._tx_c_xfer()
-            except (ValueError, IndexError):
-                # If the data is not in the expected format, send an error message
-                m = self._tx_c.write(b"Error: Invalid data format")
-                self._tx_c_xfer()
-
-        else:
-            # if data is not in the expected format, send an error message:
-            m = self._tx_c.write(b"Invalid data format")
+            # Send a response back to the host
+            m = self._tx_c.write(b"Data received successfully")
             self._tx_c_xfer()
-
+        except (ValueError, IndexError):
+            # If the data is not in the expected format, send an error message
+            m = self._tx_c.write(b"Error: Invalid data format")
+            self._tx_c_xfer()
 
     def desc_cfg(self, desc, itf_num, ep_num, strs):
         strs.append("WZ1")
