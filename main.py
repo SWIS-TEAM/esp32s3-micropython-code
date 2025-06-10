@@ -83,7 +83,6 @@ class WZab1Interface(Interface):
         self._rx.finish_read(len(m))
         # check if data is correctly formatted
         # Extract the data and print it on the LCD
-        # Assuming the format is "CPU:30;RAM:10;DISK:20"
         try:
             parts = dt.decode('utf-8').split(';')
             usage_dict = {}
