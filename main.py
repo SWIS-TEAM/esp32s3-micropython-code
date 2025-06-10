@@ -3,19 +3,26 @@
 # Based on examples from 
 # https://github.com/projectgus/micropython-lib/tree/feature/usbd_python/micropython/usb
 # MIT license; Copyright (c) 2023 Paul Hamshere, 2023-2024 Angus Gratton
+# Modified by Piotr Baprawski and Piotr Polnau for SWIS25L Project.
 
-import struct
 from micropython import schedule
 from usb.device.core import Interface, Buffer
 from lcd_printer import LCDPrinter
 import usb.device
 
 
+
 _EP_IN_FLAG = const(1 << 7)
+NUM_ITFS = const(1)
+NUM_EPS = const(4)  # 4 endpoints (2 IN and 2 OUT)
+
 
 class WZab1Interface(Interface):
-    # Base class to implement a USB WZab1 device in Python.
-    
+    """
+    Base class to implement a USB WZab1 device in Python.
+    This class handles USB transfers and provides a simple interface for
+    sending and receiving data over USB.
+    """
     def __init__(self,rxlen=3000, txlen=3000):
         super().__init__()
         self.ep_out = None # RX direction (host to device)
@@ -70,7 +77,7 @@ class WZab1Interface(Interface):
             self.submit_xfer(self.ep_c_out, self._rx_c.pend_write(), self._rx_c_cb)
 
     def _rx_c_cb(self, ep, res, num_bytes):
-        #print("rx:"+str(num_bytes)+"\n")
+        # Same here
         if res == 0:
             self._rx_c.finish_write(num_bytes)
             schedule(self._on_rx_c, ep)
@@ -81,7 +88,7 @@ class WZab1Interface(Interface):
         m = self._rx.pend_read()
         dt = bytes(m)        
         self._rx.finish_read(len(m))
-        # check if data is correctly formatted
+
         # Extract the data and print it on the LCD
         try:
             parts = dt.decode('utf-8').split(';')
@@ -104,15 +111,12 @@ class WZab1Interface(Interface):
         
 
     def _on_rx_c(self, ep):
-        # Receive received data. Called via micropython.schedule, outside of the USB callback function.l
+        # Receive received data. Called via micropython.schedule, outside of the USB callback function.
         m = self._rx_c.pend_read()
         dt = bytes(m)        
         self._rx_c.finish_read(len(m))
         # check if data is correctly formatted
         try:
-            # clear lcd
-            # self.lcd_printer.tft.fill(0)
-            # self.lcd_printer.print_info("dt: " + dt.decode('utf-8'), 10, self.lcd_printer.FIRST_ROW_Y)
             parts = dt.decode('utf-8').split(';')
             usage_dict = {}
             for part in parts:
@@ -144,20 +148,21 @@ class WZab1Interface(Interface):
         desc.endpoint(self.ep_c_in,"bulk",64,0)
         
     def num_itfs(self):
-        return 1
+        return NUM_ITFS
         
     def num_eps(self):
-        return 4
+        return NUM_EPS
 
     def on_open(self):
         super().on_open()
+
         # kick off any transfers that may have queued while the device was not open
         self._tx_xfer()
         self._rx_xfer()
         self._tx_c_xfer()
         self._rx_c_xfer()
- 
 
-wz=WZab1Interface()                                                         
-usb.device.get().init(wz, builtin_driver=True)
-       
+
+if __name__ == "__main__":
+    wz = WZab1Interface()
+    usb.device.get().init(wz, builtin_driver=True)

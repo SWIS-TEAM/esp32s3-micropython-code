@@ -109,7 +109,7 @@ class LCDPrinter:
             
     def print_usage(self, usage_dict):
         """
-        Display CPU, RAM, and DISK usage on the TFT display.
+        Display Usage statistics on the TFT display.
         :param usage_dict: A dictionary containing usage data with keys "User", "System", "Idle", etc.
         """
 
@@ -144,20 +144,22 @@ class LCDPrinter:
                     color, 
                     font=font_schmol)
 
-def main():
+
+# Example usage
+if __name__ == "__main__":
     printer = LCDPrinter()
     while True:
         cpu = random.randint(45, 55)
         ram = random.randint(17, 23)
         disk = random.randint(8, 12)
-        printer.print_usage({
-            "User": f"{cpu}%",
-            "System": f"{ram}%",
-            "Idle": f"{disk}%",
-            "RAM_USED": f"{random.randint(10, 30)}%",
-            "OUT_OF": f"{random.randint(1, 5)}GB"
-        })
-        time.sleep(3)
+        MAX_RAM = 16
 
-if __name__ == "__main__":
-    main()
+        usage_dict = {
+            "User": f"{cpu}",
+            "System": f"{ram}",
+            "Idle": f"{disk}",
+            "RAM_USED": f"{random.randint(MAX_RAM//4, MAX_RAM)} GiB",
+            "OUT_OF": f"{MAX_RAM} GiB"
+        }
+        printer.print_usage(usage_dict)
+        time.sleep(3)
