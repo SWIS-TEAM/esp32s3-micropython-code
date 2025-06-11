@@ -116,7 +116,7 @@ class LCDPrinter:
         # Clear the display area under the title
         self.clear_display_under_title()
 
-        # Do not clear the whole screen; only clear rectangles where values are printed
+        # Print the usage statistics
         screen_width = self.tft.physical_width
         order = ["User", "System", "Idle", "RAM_USED", "OUT_OF"]
         max_height = 0

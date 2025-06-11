@@ -136,6 +136,9 @@ class WZab1Interface(Interface):
             self._tx_c_xfer()
 
     def desc_cfg(self, desc, itf_num, ep_num, strs):
+        """
+        Configure the USB device descriptor for this interface.
+        """
         strs.append("WZ1")
         desc.interface(itf_num, 4, iInterface = len(strs)-1)
         self.ep_out = ep_num
@@ -148,12 +151,21 @@ class WZab1Interface(Interface):
         desc.endpoint(self.ep_c_in,"bulk",64,0)
         
     def num_itfs(self):
+        """
+        Return the number of interfaces for this device.
+        """
         return NUM_ITFS
         
     def num_eps(self):
+        """
+        Return the number of endpoints for this interface.
+        """
         return NUM_EPS
 
     def on_open(self):
+        """
+        Called when the interface is opened.
+        """
         super().on_open()
 
         # kick off any transfers that may have queued while the device was not open
